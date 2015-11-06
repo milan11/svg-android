@@ -871,6 +871,8 @@ public class SVGParser {
 
 		boolean whiteMode = false;
 
+		boolean showDisplayNone = false;
+
 		Set<String> drawOnlyIds = null;
 		Set<String> doNotDrawIds = null;
 		int levelInIdFilter = 0;
@@ -912,6 +914,10 @@ public class SVGParser {
 
 		public void setWhiteMode(boolean whiteMode) {
 			this.whiteMode = whiteMode;
+		}
+
+		public void setShowDisplayNone(boolean showDisplayNone) {
+			this.showDisplayNone = showDisplayNone;
 		}
 
 		public void setDrawOnlyIds(Set<String> ids) {
@@ -997,7 +1003,7 @@ public class SVGParser {
 		private final Matrix gradMatrix = new Matrix();
 
 		private boolean doFill(Properties atts, RectF bounding_box) {
-			if ("none".equals(atts.getString("display"))) {
+			if ((!showDisplayNone) && "none".equals(atts.getString("display"))) {
 				return false;
 			}
 			if (whiteMode) {
@@ -1070,7 +1076,7 @@ public class SVGParser {
 				// Never stroke in white mode
 				return false;
 			}
-			if ("none".equals(atts.getString("display"))) {
+			if ((!showDisplayNone) && "none".equals(atts.getString("display"))) {
 				return false;
 			}
 
@@ -1426,7 +1432,7 @@ public class SVGParser {
 					// Util.debug("Hidden up: " + hiddenLevel);
 				}
 				// Go in to hidden mode if display is "none"
-				if ("none".equals(getStringAttr("display", atts)) || "none".equals(props.getString("display"))) {
+				if ((!showDisplayNone) && ("none".equals(getStringAttr("display", atts)) || "none".equals(props.getString("display")))) {
 					if (!hidden) {
 						hidden = true;
 						hiddenLevel = 1;

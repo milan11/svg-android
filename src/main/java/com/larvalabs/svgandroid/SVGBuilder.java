@@ -30,6 +30,7 @@ public class SVGBuilder {
 	private boolean whiteMode = false;
 	private boolean overideOpacity = false;
 	private boolean closeInputStream = true;
+	private boolean showDisplayNone = false;
 	private Set<String> drawOnlyIds = null;
 	private Set<String> doNotDrawIds = null;
 
@@ -147,6 +148,11 @@ public class SVGBuilder {
 		return this;
 	}
 
+	public SVGBuilder setShowDisplayNone(boolean showDisplayNone) {
+		this.showDisplayNone = showDisplayNone;
+		return this;
+	}
+
 	public SVGBuilder setDrawOnlyIds(Set<String> ids) {
 		this.drawOnlyIds = ids;
 		return this;
@@ -172,6 +178,7 @@ public class SVGBuilder {
 			final SVGHandler handler = new SVGHandler();
 			handler.setColorSwap(searchColor, replaceColor, overideOpacity);
 			handler.setWhiteMode(whiteMode);
+			handler.setShowDisplayNone(showDisplayNone);
 			handler.setDrawOnlyIds(drawOnlyIds);
 			handler.setDoNotDrawIds(doNotDrawIds);
 			if (strokeColorFilter != null) {
