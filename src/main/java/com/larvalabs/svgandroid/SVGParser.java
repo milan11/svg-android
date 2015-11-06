@@ -649,14 +649,6 @@ public class SVGParser {
 			this.nextCmd = nextCmd;
 		}
 
-		public int getNextCmd() {
-			return nextCmd;
-		}
-
-		public float getNumber(int index) {
-			return numbers.get(index);
-		}
-
 	}
 
 	private static class Gradient {
