@@ -6,3 +6,7 @@ See [README](https://github.com/japgolly/svg-android/blob/master/README.md) in t
 
 # Changes made here
 
+- fix for Android 6
+- selecting which IDs to draw/not draw
+- possibility to draw elements with display:none
+
