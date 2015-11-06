@@ -51,6 +51,8 @@ public class SVGParser {
 
 	private static boolean DISALLOW_DOCTYPE_DECL = true;
 
+	private static boolean DO_LOG = false;
+
 	/**
 	 * Parses a single SVG path and returns it as a <code>android.graphics.Path</code> object. An example path is
 	 * <code>M250,150L150,350L350,350Z</code>, which draws a triangle.
@@ -87,7 +89,9 @@ public class SVGParser {
 			}
 			return result;
 		} catch (Exception e) {
-			Log.e(TAG, "Failed to parse SVG.", e);
+			if (DO_LOG) {
+				Log.e(TAG, "Failed to parse SVG.", e);
+			}
 			throw new SVGParseException(e);
 		}
 	}
@@ -196,7 +200,9 @@ public class SVGParser {
 		Matrix matrix = new Matrix();
 		while (true) {
 			parseTransformItem(s, matrix);
-			// Log.i(TAG, "Transformed: (" + s + ") " + matrix);
+			if (DO_LOG) {
+				// Log.i(TAG, "Transformed: (" + s + ") " + matrix);
+			}
 			final int rparen = s.indexOf(")");
 			if (rparen > 0 && s.length() > rparen + 1) {
 				s = TRANSFORM_SEP.matcher(s.substring(rparen + 1)).replaceFirst("");
@@ -268,7 +274,9 @@ public class SVGParser {
 				matrix.preTranslate(cx, cy);
 			}
 		} else {
-			Log.w(TAG, "Invalid transform (" + s + ")");
+			if (DO_LOG) {
+				Log.w(TAG, "Invalid transform (" + s + ")");
+			}
 		}
 		return matrix;
 	}
@@ -478,7 +486,9 @@ public class SVGParser {
 				break;
 			}
 			default:
-				Log.w(TAG, "Invalid path command: " + cmd);
+				if (DO_LOG) {
+					Log.w(TAG, "Invalid path command: " + cmd);
+				}
 				ph.advance();
 			}
 			if (!wasCurve) {
@@ -501,8 +511,10 @@ public class SVGParser {
 
 	private static void drawArc(Path p, float lastX, float lastY, float x, float y, float rx, float ry, float theta,
 			int largeArc, int sweepArc) {
-		// Log.d("drawArc", "from (" + lastX + "," + lastY + ") to (" + x + ","+ y + ") r=(" + rx + "," + ry +
-		// ") theta=" + theta + " flags="+ largeArc + "," + sweepArc);
+		if (DO_LOG) {
+			// Log.d("drawArc", "from (" + lastX + "," + lastY + ") to (" + x + ","+ y + ") r=(" + rx + "," + ry +
+			// ") theta=" + theta + " flags="+ largeArc + "," + sweepArc);
+		}
 
 		// http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
 
@@ -622,7 +634,9 @@ public class SVGParser {
 			str = str.substring(0, str.length() - 1);
 			return Float.parseFloat(str) / 100;
 		}
-		// Log.d(TAG, "Float parsing '" + name + "=" + v + "'");
+		if (DO_LOG) {
+			// Log.d(TAG, "Float parsing '" + name + "=" + v + "'");
+		}
 		return Float.parseFloat(str);
 	}
 
@@ -1030,14 +1044,18 @@ public class SVGParser {
 						fillPaint.setShader(shader);
 						gradMatrix.set(g.matrix);
 						if (g.boundingBox && bounding_box != null) {
-							// Log.d("svg", "gradient is bounding box");
+							if (DO_LOG) {
+								// Log.d("svg", "gradient is bounding box");
+							}
 							gradMatrix.preTranslate(bounding_box.left, bounding_box.top);
 							gradMatrix.preScale(bounding_box.width(), bounding_box.height());
 						}
 						shader.setLocalMatrix(gradMatrix);
 						return true;
 					} else {
-						Log.w(TAG, "Didn't find shader, using black: " + id);
+						if (DO_LOG) {
+							Log.w(TAG, "Didn't find shader, using black: " + id);
+						}
 						fillPaint.setShader(null);
 						doColor(atts, Color.BLACK, true, fillPaint);
 						return true;
@@ -1053,7 +1071,9 @@ public class SVGParser {
 						doColor(atts, color, true, fillPaint);
 						return true;
 					} else {
-						Log.w(TAG, "Unrecognized fill color, using black: " + fillString);
+						if (DO_LOG) {
+							Log.w(TAG, "Unrecognized fill color, using black: " + fillString);
+						}
 						doColor(atts, Color.BLACK, true, fillPaint);
 						return true;
 					}
@@ -1117,7 +1137,9 @@ public class SVGParser {
 						doColor(atts, color, false, strokePaint);
 						return true;
 					} else {
-						Log.w(TAG, "Unrecognized stroke color, using none: " + strokeString);
+						if (DO_LOG) {
+							Log.w(TAG, "Unrecognized stroke color, using none: " + strokeString);
+						}
 						strokePaint.setColor(Color.TRANSPARENT);
 						return false;
 					}
@@ -1605,7 +1627,9 @@ public class SVGParser {
 				}
 				popTransform();
 			} else if (!hidden) {
-				Log.w(TAG, "UNRECOGNIZED SVG COMMAND: " + localName);
+				if (DO_LOG) {
+					Log.w(TAG, "UNRECOGNIZED SVG COMMAND: " + localName);
+				}
 			}
 		}
 
