@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
+import java.util.Set;
 
 import org.xml.sax.InputSource;
 
@@ -29,6 +30,8 @@ public class SVGBuilder {
 	private boolean whiteMode = false;
 	private boolean overideOpacity = false;
 	private boolean closeInputStream = true;
+	private Set<String> drawOnlyIds = null;
+	private Set<String> doNotDrawIds = null;
 
 	/**
 	 * Parse SVG data from an input stream.
@@ -144,6 +147,16 @@ public class SVGBuilder {
 		return this;
 	}
 
+	public SVGBuilder setDrawOnlyIds(Set<String> ids) {
+		this.drawOnlyIds = ids;
+		return this;
+	}
+
+	public SVGBuilder setDoNotDrawIds(Set<String> ids) {
+		this.doNotDrawIds = ids;
+		return this;
+	}
+
 	/**
 	 * Loads, reads, parses the SVG (or SVGZ).
 	 * 
@@ -159,6 +172,8 @@ public class SVGBuilder {
 			final SVGHandler handler = new SVGHandler();
 			handler.setColorSwap(searchColor, replaceColor, overideOpacity);
 			handler.setWhiteMode(whiteMode);
+			handler.setDrawOnlyIds(drawOnlyIds);
+			handler.setDoNotDrawIds(doNotDrawIds);
 			if (strokeColorFilter != null) {
 				handler.strokePaint.setColorFilter(strokeColorFilter);
 			}

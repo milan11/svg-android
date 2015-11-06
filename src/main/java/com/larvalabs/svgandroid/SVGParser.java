@@ -18,6 +18,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -837,6 +838,9 @@ public class SVGParser {
 
 		final LinkedList<LayerAttributes> layerAttributeStack = new LinkedList<LayerAttributes>();
 
+		Canvas origCanvas;
+		Canvas dummyCanvas = new Canvas();
+
 		Paint strokePaint;
 		boolean strokeSet = false;
 		final LinkedList<Paint> strokePaintStack = new LinkedList<Paint>();
@@ -866,6 +870,10 @@ public class SVGParser {
 		Float opacityMultiplier = null;
 
 		boolean whiteMode = false;
+
+		Set<String> drawOnlyIds = null;
+		Set<String> doNotDrawIds = null;
+		int levelInIdFilter = 0;
 
 		Integer canvasRestoreCount;
 
@@ -904,6 +912,76 @@ public class SVGParser {
 
 		public void setWhiteMode(boolean whiteMode) {
 			this.whiteMode = whiteMode;
+		}
+
+		public void setDrawOnlyIds(Set<String> ids) {
+			this.drawOnlyIds = ids;
+		}
+
+		public void setDoNotDrawIds(Set<String> ids) {
+			this.doNotDrawIds = ids;
+		}
+
+		private void handleDrawOnlyId_start(String currentId) {
+			if (levelInIdFilter > 0) {
+				// we are currently in the filtered id
+				++levelInIdFilter;
+				return;
+			}
+
+			if (drawOnlyIds != null) {
+
+				if ((currentId != null) && drawOnlyIds.contains(currentId)) {
+					// we begin the filter
+					levelInIdFilter = 1;
+					enableDrawing();
+					return;
+				}
+
+				disableDrawing();
+				return;
+			}
+
+			if (doNotDrawIds != null) {
+
+				if ((currentId != null) && doNotDrawIds.contains(currentId)) {
+					// we begin the filter
+					levelInIdFilter = 1;
+					disableDrawing();
+					return;
+				}
+
+				enableDrawing();
+				return;
+			}
+
+			{
+				// we are drawing everything
+				enableDrawing();
+				return;
+			}
+		}
+
+		private void handleDrawOnlyId_end() {
+			if (levelInIdFilter > 0) {
+				--levelInIdFilter;
+				if (levelInIdFilter == 0) {
+					if (drawOnlyIds != null) {
+						disableDrawing();
+					}
+					if (doNotDrawIds != null) {
+						enableDrawing();
+					}
+				}
+			}
+		}
+
+		private void disableDrawing() {
+			canvas = dummyCanvas;
+		}
+
+		private void enableDrawing() {
+			canvas = origCanvas;
 		}
 
 		@Override
@@ -1250,6 +1328,9 @@ public class SVGParser {
 		@Override
 		public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
 				throws SAXException {
+
+			handleDrawOnlyId_start(atts.getValue("id"));
+
 			// Reset paint opacity
 			strokePaint.setAlpha(255);
 			fillPaint.setAlpha(255);
@@ -1277,6 +1358,7 @@ public class SVGParser {
 			if (localName.equals("svg")) {
 				canvas = null;
                 SVG_FILL = getStringAttr("fill", atts);
+				origCanvas = null;
 				String viewboxStr = getStringAttr("viewBox", atts);
 				if (viewboxStr != null) {
 					String[] dims = viewboxStr.replace(',', ' ').split("\\s+");
@@ -1291,20 +1373,20 @@ public class SVGParser {
 
 							float width = FloatMath.ceil(x2 - x1);
 							float height = FloatMath.ceil(y2 - y1);
-							canvas = picture.beginRecording((int) width, (int) height);
-							canvasRestoreCount = canvas.save();
-							canvas.clipRect(0f, 0f, width, height);
+							origCanvas = picture.beginRecording((int) width, (int) height);
+							canvasRestoreCount = origCanvas.save();
+							origCanvas.clipRect(0f, 0f, width, height);
 							limitsAdjustmentX = -x1;
 							limitsAdjustmentY = -y1;
-							canvas.translate(limitsAdjustmentX, limitsAdjustmentY);
+							origCanvas.translate(limitsAdjustmentX, limitsAdjustmentY);
 						}
 					}
 				}
 				// No viewbox
-				if (canvas == null) {
+				if (origCanvas == null) {
 					int width = (int) FloatMath.ceil(getFloatAttr("width", atts));
 					int height = (int) FloatMath.ceil(getFloatAttr("height", atts));
-					canvas = picture.beginRecording(width, height);
+					origCanvas = picture.beginRecording(width, height);
 					canvasRestoreCount = null;
 				}
 
@@ -1599,6 +1681,9 @@ public class SVGParser {
 					canvas.restore();
 				}
 			}
+
+			handleDrawOnlyId_end();
+
 		}
 	}
 }
