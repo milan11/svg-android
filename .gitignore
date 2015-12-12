@@ -1,12 +1,1 @@
-target
-~*.sw[p-z]
-
-# IntelliJ IDEA project, Android library
-/AndroidManifest.xml
-/bin/
-/libs/
-/proguard-project.txt
-/project.properties
-/res/
-/svgandroid.iml
-/svgandroid.ipr
+/build
