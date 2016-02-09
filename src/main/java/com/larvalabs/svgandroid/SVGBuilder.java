@@ -3,6 +3,7 @@ package com.larvalabs.svgandroid;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.ColorFilter;
+import android.graphics.RectF;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -33,6 +34,7 @@ public class SVGBuilder {
 	private boolean showDisplayNone = false;
 	private Set<String> drawOnlyIds = null;
 	private Set<String> doNotDrawIds = null;
+	private RectF viewBoxOverride = null;
 
 	/**
 	 * Parse SVG data from an input stream.
@@ -163,6 +165,11 @@ public class SVGBuilder {
 		return this;
 	}
 
+	public SVGBuilder setViewBoxOverride(RectF viewBoxOverride) {
+		this.viewBoxOverride = viewBoxOverride;
+		return this;
+	}
+
 	/**
 	 * Loads, reads, parses the SVG (or SVGZ).
 	 * 
@@ -181,6 +188,7 @@ public class SVGBuilder {
 			handler.setShowDisplayNone(showDisplayNone);
 			handler.setDrawOnlyIds(drawOnlyIds);
 			handler.setDoNotDrawIds(doNotDrawIds);
+			handler.setViewBoxOverride(viewBoxOverride);
 			if (strokeColorFilter != null) {
 				handler.strokePaint.setColorFilter(strokeColorFilter);
 			}

@@ -882,6 +882,8 @@ public class SVGParser {
 		Set<String> doNotDrawIds = null;
 		int levelInIdFilter = 0;
 
+		private RectF viewBoxOverride = null;
+
 		Integer canvasRestoreCount;
 
 		final LinkedList<Boolean> transformStack = new LinkedList<Boolean>();
@@ -931,6 +933,10 @@ public class SVGParser {
 
 		public void setDoNotDrawIds(Set<String> ids) {
 			this.doNotDrawIds = ids;
+		}
+
+		public void setViewBoxOverride(RectF viewBoxOverride) {
+			this.viewBoxOverride = viewBoxOverride;
 		}
 
 		private void handleDrawOnlyId_start(String currentId) {
@@ -1378,31 +1384,47 @@ public class SVGParser {
 				canvas = null;
                 SVG_FILL = getStringAttr("fill", atts);
 				origCanvas = null;
+
+				Float x1 = null;
+				Float y1 = null;
+				Float x2 = null;
+				Float y2 = null;
+
 				String viewboxStr = getStringAttr("viewBox", atts);
 				if (viewboxStr != null) {
 					String[] dims = viewboxStr.replace(',', ' ').split("\\s+");
 					if (dims.length == 4) {
-						Float x1 = parseFloatValue(dims[0], null);
-						Float y1 = parseFloatValue(dims[1], null);
-						Float x2 = parseFloatValue(dims[2], null);
-						Float y2 = parseFloatValue(dims[3], null);
-						if (x1 != null && x2 != null && y1 != null && y2 != null) {
-							x2 += x1;
-							y2 += y1;
+						Float x = parseFloatValue(dims[0], null);
+						Float y = parseFloatValue(dims[1], null);
+						Float width = parseFloatValue(dims[2], null);
+						Float height = parseFloatValue(dims[3], null);
 
-							float width = (float)Math.ceil(x2 - x1);
-							float height = (float)Math.ceil(y2 - y1);
-							origCanvas = picture.beginRecording((int) width, (int) height);
-							canvasRestoreCount = origCanvas.save();
-							origCanvas.clipRect(0f, 0f, width, height);
-							limitsAdjustmentX = -x1;
-							limitsAdjustmentY = -y1;
-							origCanvas.translate(limitsAdjustmentX, limitsAdjustmentY);
+						if (x != null && y != null && width != null && height != null) {
+							x1 = x;
+							y1 = y;
+							x2 = x + width;
+							y2 = y + height;
 						}
 					}
 				}
-				// No viewbox
-				if (origCanvas == null) {
+
+				if (viewBoxOverride != null) {
+					x1 = viewBoxOverride.left;
+					y1 = viewBoxOverride.top;
+					x2 = viewBoxOverride.right;
+					y2 = viewBoxOverride.bottom;
+				}
+
+				if (x1 != null && x2 != null && y1 != null && y2 != null) {
+					float width = (float)Math.ceil(x2 - x1);
+					float height = (float)Math.ceil(y2 - y1);
+					origCanvas = picture.beginRecording((int) width, (int) height);
+					canvasRestoreCount = origCanvas.save();
+					origCanvas.clipRect(0f, 0f, width, height);
+					limitsAdjustmentX = -x1;
+					limitsAdjustmentY = -y1;
+					origCanvas.translate(limitsAdjustmentX, limitsAdjustmentY);
+				} else {
 					int width = (int) Math.ceil(getFloatAttr("width", atts));
 					int height = (int) Math.ceil(getFloatAttr("height", atts));
 					origCanvas = picture.beginRecording(width, height);
